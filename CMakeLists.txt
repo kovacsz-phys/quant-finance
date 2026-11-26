@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(QuantFinance
+    VERSION 1.0
+    LANGUAGES CXX
+)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Quantitative finance library
+add_library(quant_finance
+    src/black_scholes.cpp
+)
+
+target_include_directories(quant_finance
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Example application
+add_executable(option_pricing
+    src/main.cpp
+)
+
+target_link_libraries(option_pricing
+    PRIVATE quant_finance
+)
+
+# Unit testing
+include(CTest)
+
+if(BUILD_TESTING)
+
+    find_package(GTest REQUIRED)
+
+    add_executable(quant_finance_tests
+        tests/test_black_scholes.cpp
+    )
+
+    target_link_libraries(quant_finance_tests
+        PRIVATE
+        quant_finance
+        GTest::gtest_main
+    )
+
+    include(GoogleTest)
+
+    gtest_discover_tests(quant_finance_tests)
+
+endif()
