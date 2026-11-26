@@ -82,3 +82,28 @@ TEST(ImpliedVolatilityTest, RejectsZeroMarketPrice)
             0.0, S, K, r, T),
         std::invalid_argument);
 }
+
+
+TEST(ImpliedVolatilityTest, UsesBisectionFallback)
+{
+    const double market_price =
+        quant::black_scholes_call(
+            S, K, r, TRUE_VOLATILITY, T);
+
+    const double implied_volatility =
+        quant::implied_volatility_call(
+            market_price, S, K, r, T, 1e-8);
+
+    EXPECT_NEAR(
+        implied_volatility,
+        TRUE_VOLATILITY,
+        1e-8);
+}
+
+TEST(ImpliedVolatilityTest, RejectsPriceAtUpperBound)
+{
+    EXPECT_THROW(
+        quant::implied_volatility_call(
+            S, S, K, r, T),
+        std::invalid_argument);
+}
