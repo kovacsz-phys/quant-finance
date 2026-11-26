@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(quant_finance
     src/black_scholes.cpp
     src/greeks.cpp
+    src/implied_volatility.cpp
 )
 
 target_include_directories(quant_finance
@@ -39,6 +40,7 @@ if(BUILD_TESTING)
     add_executable(quant_finance_tests
         tests/test_black_scholes.cpp
         tests/test_greeks.cpp
+        tests/test_implied_volatility.cpp
     )
 
     target_link_libraries(quant_finance_tests
