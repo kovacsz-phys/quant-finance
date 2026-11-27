@@ -1,12 +1,9 @@
-build/
-build-native/
-cmake-build-*/
-.venv/
-.vscode/
-
-*.o
 *.a
 *.so
 *.out
 
-binomial_convergence.csv
+build/
+build-native/
+.venv/
+
+*.csv

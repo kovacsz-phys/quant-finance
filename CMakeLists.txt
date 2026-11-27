@@ -16,6 +16,7 @@ add_library(quant_finance
     src/implied_volatility.cpp
     src/binomial.cpp
     src/binomial_direct.cpp
+    src/monte_carlo.cpp
 )
 
 target_include_directories(quant_finance
@@ -26,6 +27,10 @@ target_include_directories(quant_finance
 # Example application
 add_executable(option_pricing
     src/main.cpp
+)
+
+target_link_libraries(option_pricing
+    PRIVATE quant_finance
 )
 
 # CRR binomial convergence analysis
@@ -55,7 +60,30 @@ target_link_libraries(binomial_comparison
     PRIVATE quant_finance
 )
 
-target_link_libraries(option_pricing
+# Monte Carlo convergence analysis
+add_executable(monte_carlo_convergence
+    examples/monte_carlo_convergence.cpp
+)
+
+target_link_libraries(monte_carlo_convergence
+    PRIVATE quant_finance
+)
+
+# Monte Carlo variance reduction experiment
+add_executable(monte_carlo_variance_reduction
+    examples/monte_carlo_variance_reduction.cpp
+)
+
+target_link_libraries(monte_carlo_variance_reduction
+    PRIVATE quant_finance
+)
+
+# Monte Carlo estimator comparison
+add_executable(monte_carlo_comparison
+    examples/monte_carlo_comparison.cpp
+)
+
+target_link_libraries(monte_carlo_comparison
     PRIVATE quant_finance
 )
 
@@ -71,6 +99,7 @@ if(BUILD_TESTING)
     tests/test_greeks.cpp
     tests/test_implied_volatility.cpp
     tests/test_binomial.cpp
+    tests/test_monte_carlo.cpp
     )
 
     target_link_libraries(quant_finance_tests

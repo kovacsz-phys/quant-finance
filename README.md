@@ -180,7 +180,171 @@ The convergence data can be exported to CSV and plotted using Python and Matplot
 
 The generated convergence plot is included in the repository as `binomial_convergence.png`.
 
-### 7. Performance Benchmarking
+### 7. Monte Carlo Option Pricing
+
+Implementation of Monte Carlo pricing for European call and put options under the geometric Brownian motion model.
+
+The terminal underlying asset price is simulated as
+
+\[
+S_T=S_0\exp\left[
+\left(r-\frac{\sigma^2}{2}\right)T
++\sigma\sqrt{T}Z
+\right],
+\]
+
+where \(Z\) is a standard normally distributed random variable.
+
+The option price is estimated from discounted simulated payoffs:
+
+\[
+\hat V_0=
+\frac{e^{-rT}}{M}
+\sum_{i=1}^{M}
+\text{Payoff}(S_T^{(i)}),
+\]
+
+where \(M\) is the number of simulated terminal asset prices.
+
+Supported functionality:
+
+- European call and put pricing
+- Geometric Brownian motion simulation
+- Pseudorandom normal sampling using `std::mt19937_64`
+- Reproducible simulations through configurable random seeds
+- Online calculation of sample mean and variance
+- Standard error estimation
+- Approximate 95% confidence intervals
+- Input validation and numerical error handling
+
+The implementation uses Welford's online algorithm to calculate the sample variance without storing individual simulation results.
+
+The standard error is calculated as
+
+\[
+SE=\frac{s}{\sqrt{M}},
+\]
+
+where \(s\) is the sample standard deviation of the discounted payoffs.
+
+The approximate 95% confidence interval is
+
+\[
+\hat V_0 \pm 1.96SE.
+\]
+
+This provides a measure of the statistical uncertainty associated with the Monte Carlo price estimate.
+
+### 8. Variance Reduction: Antithetic Variates
+
+The Monte Carlo implementation supports antithetic variates as a variance-reduction technique.
+
+Instead of generating independent random numbers for every simulation, the algorithm generates pairs:
+
+\[
+Z,\quad -Z.
+\]
+
+The corresponding discounted payoffs are averaged:
+
+\[
+X_{\text{pair}}=
+\frac{1}{2}
+\left[
+X(Z)+X(-Z)
+\right].
+\]
+
+The estimator is then calculated using the pair averages as independent observations.
+
+This exploits the negative correlation between paired payoffs to reduce the variance of the price estimator.
+
+The standard error is calculated from the pair-average observations, correctly accounting for the dependence between the two payoffs within each pair.
+
+Antithetic variates require an even number of simulated terminal asset prices.
+
+### 9. Monte Carlo Convergence Analysis
+
+The project includes experiments comparing Monte Carlo estimates against analytical Black–Scholes reference prices.
+
+Simulation counts range from 1,000 to 5,000,000.
+
+The experiments examine:
+
+- Call and put pricing errors
+- Standard error as a function of simulation count
+- Empirical convergence order
+- Comparison with the theoretical Monte Carlo convergence rate
+
+For standard Monte Carlo simulation, the expected convergence relationship is
+
+\[
+SE(M)=O(M^{-1/2}),
+\]
+
+where \(M\) is the number of simulations.
+
+The numerical experiments demonstrate convergence towards this theoretical rate.
+
+The results are exported to CSV and visualized using Python and Matplotlib.
+
+The generated convergence plot is included as `monte_carlo_convergence.png`.
+
+### 10. Monte Carlo Variance-Reduction Benchmark
+
+A comparative benchmark evaluates standard Monte Carlo against antithetic variates for European call and put options.
+
+The experiment uses the following parameters:
+
+| Parameter | Value |
+|---|---:|
+| Initial asset price | 100 |
+| Strike price | 100 |
+| Risk-free interest rate | 5% |
+| Volatility | 20% |
+| Time to maturity | 1 year |
+| Simulation counts | 1,000–5,000,000 |
+
+The benchmark measures median execution time over 20 repetitions and compares the standard errors of the two estimators.
+
+At 5,000,000 simulated terminal asset prices, the following results were obtained:
+
+| Metric | European Call | European Put |
+|---|---:|---:|
+| Standard MC standard error | 0.006584 | 0.003875 |
+| Antithetic standard error | 0.004654 | 0.002964 |
+| Variance reduction | 50.04% | 41.47% |
+| Variance efficiency ratio | 2.00x | 1.71x |
+| Execution speedup | 1.61x | 1.62x |
+
+Variance reduction is calculated as
+
+\[
+1-\frac{SE_{\text{antithetic}}^2}
+{SE_{\text{standard}}^2}.
+\]
+
+The variance efficiency ratio is
+
+\[
+\frac{SE_{\text{standard}}^2}
+{SE_{\text{antithetic}}^2}.
+\]
+
+For the tested parameters, antithetic variates reduce the estimated variance by approximately 50% for the call option and 41% for the put option.
+
+The results demonstrate that variance reduction can improve both statistical and computational efficiency.
+
+These measurements are empirical results for the specified model parameters and implementation, rather than universal performance guarantees.
+
+The benchmark generates the following visualizations:
+
+- `monte_carlo_call_comparison.png` — standard error convergence for call options
+- `monte_carlo_put_comparison.png` — standard error convergence for put options
+- `monte_carlo_variance_reduction.png` — variance reduction across simulation counts
+- `monte_carlo_speedup.png` — execution speedup across simulation counts
+
+## 11. Binomial Performance Benchmarking
 
 The project includes benchmarks comparing the original backward-induction algorithm with the optimized direct European pricing algorithm.
 
@@ -225,7 +389,6 @@ The benchmark uses repeated measurements and reports median execution times. Res
 | Ninja | Build backend |
 | GCC / G++ | C++ compiler |
 | Google Test | Unit testing |
-| Eigen | Numerical computing library |
 | Python | Numerical analysis and plotting |
 | Matplotlib | Visualization |
 | Git | Version control |
@@ -241,26 +404,38 @@ quant-finance/
 │       ├── black_scholes.hpp
 │       ├── greeks.hpp
 │       ├── implied_volatility.hpp
-│       └── binomial.hpp
+│       ├── binomial.hpp
+│       └── monte_carlo.hpp
 ├── src/
 │   ├── black_scholes.cpp
 │   ├── greeks.cpp
 │   ├── implied_volatility.cpp
 │   ├── binomial.cpp
 │   ├── binomial_direct.cpp
+│   ├── monte_carlo.cpp
 │   └── main.cpp
 ├── tests/
 │   ├── test_black_scholes.cpp
 │   ├── test_greeks.cpp
 │   ├── test_implied_volatility.cpp
-│   └── test_binomial.cpp
+│   ├── test_binomial.cpp
+│   └── test_monte_carlo.cpp
 ├── examples/
 │   ├── binomial_convergence.cpp
 │   ├── binomial_benchmark.cpp
 │   ├── binomial_comparison.cpp
-│   └── plot_convergence.py
+│   ├── monte_carlo_convergence.cpp
+│   ├── monte_carlo_variance_reduction.cpp
+│   ├── monte_carlo_comparison.cpp
+│   ├── plot_convergence.py
+│   ├── plot_monte_carlo.py
+│   └── plot_monte_carlo_comparison.py
 ├── binomial_convergence.png
-└── build/
+├── monte_carlo_convergence.png
+├── monte_carlo_call_comparison.png
+├── monte_carlo_put_comparison.png
+├── monte_carlo_variance_reduction.png
+└── monte_carlo_speedup.png
 ```
 
 The `build/` and `build-native/` directories contain generated build files and are excluded from version control.
@@ -272,7 +447,7 @@ The `build/` and `build-native/` directories contain generated build files and a
 - Ninja
 - Google Test
 - Python 3
-- Matplotlib (for plotting convergence results)
+- Matplotlib (for plotting convergence and benchmark results)
 
 On Ubuntu, the main dependencies can be installed using:
 
@@ -326,7 +501,7 @@ Run the complete test suite:
 ctest --test-dir build --output-on-failure
 ```
 
-The current test suite contains **38 tests** covering:
+The current test suite contains **55 tests** covering:
 
 - Black–Scholes call and put pricing
 - Option Greeks
@@ -337,9 +512,14 @@ The current test suite contains **38 tests** covering:
 - Convergence towards Black–Scholes prices
 - Direct pricing versus backward induction
 - Direct European pricing convergence and parity
-- Invalid risk-neutral probabilities and other error conditions
+- Monte Carlo call and put pricing
+- Reproducibility with fixed random seeds
+- Standard error and confidence interval calculations
+- Antithetic variates pricing and reproducibility
+- Variance reduction for call and put options
+- Input validation and error handling
 
-All 38 tests pass successfully.
+**All 55 tests pass successfully.**
 
 ## Performance Benchmarking
 
@@ -357,6 +537,8 @@ Compile:
 cmake --build build-native -j2
 ```
 
+### Binomial benchmarks
+
 Run the direct-versus-backward-induction comparison:
 
 ```bash
@@ -369,4 +551,75 @@ Run the original backward-induction benchmark for a specific number of steps:
 ./build-native/binomial_benchmark 5000
 ```
 
-The `-march=native` option enables processor-specific optimizations. Such binaries may not be portable to older
+### Monte Carlo experiments
+
+Run the convergence experiment:
+
+```bash
+./build-native/monte_carlo_convergence
+```
+
+Run the variance-reduction benchmark:
+
+```bash
+./build-native/monte_carlo_variance_reduction
+```
+
+Run the standard-versus-antithetic comparison:
+
+```bash
+./build-native/monte_carlo_comparison
+```
+
+The Monte Carlo comparison generates `monte_carlo_comparison.csv`.
+
+### Plotting results
+
+Create and activate a Python virtual environment:
+
+```bash
+python3 -m venv .venv
+
+source .venv/bin/activate
+
+pip install matplotlib
+```
+
+Generate the binomial convergence plot:
+
+```bash
+python examples/plot_convergence.py
+```
+
+Generate the Monte Carlo convergence plot:
+
+```bash
+python examples/plot_monte_carlo.py
+```
+
+Generate the Monte Carlo comparison plots:
+
+```bash
+python examples/plot_monte_carlo_comparison.py
+```
+
+The `-march=native` option enables processor-specific optimizations. Such binaries may not be portable to older or different processor architectures.
+
+Benchmark results depend on the processor, compiler, optimization flags, and system load. They should be interpreted as measurements of the tested implementation and environment.
+
+## Testing and Validation
+
+The project uses Google Test for automated unit testing.
+
+Numerical implementations are validated through:
+
+- Analytical reference values
+- Put–call parity
+- Finite-difference approximations
+- Convergence towards analytical solutions
+- Cross-validation between independent pricing algorithms
+- Reproducibility checks
+- Statistical error estimation
+- Input validation and error handling
+
+The goal is to combine mathematical correctness with maintainable, efficient C++ implementations.
