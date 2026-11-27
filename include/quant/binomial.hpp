@@ -23,4 +23,14 @@ double crr_binomial_price(
     ExerciseStyle exercise_style
 );
 
+double crr_european_price_direct(
+    double spot,
+    double strike,
+    double rate,
+    double volatility,
+    double maturity,
+    int steps,
+    OptionType option_type
+);
+
 }

@@ -15,6 +15,7 @@ add_library(quant_finance
     src/greeks.cpp
     src/implied_volatility.cpp
     src/binomial.cpp
+    src/binomial_direct.cpp
 )
 
 target_include_directories(quant_finance
@@ -42,6 +43,15 @@ add_executable(binomial_benchmark
 )
 
 target_link_libraries(binomial_benchmark
+    PRIVATE quant_finance
+)
+
+# Direct vs. backward-induction performance comparison
+add_executable(binomial_comparison
+    examples/binomial_comparison.cpp
+)
+
+target_link_libraries(binomial_comparison
     PRIVATE quant_finance
 )
 

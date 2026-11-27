@@ -150,3 +150,118 @@ TEST(BinomialTest, RejectsInvalidRiskNeutralProbability)
             quant::ExerciseStyle::European),
         std::invalid_argument);
 }
+
+TEST(BinomialTest, DirectCallMatchesBackwardInduction)
+{
+    constexpr double spot = 100.0;
+    constexpr double strike = 100.0;
+    constexpr double rate = 0.05;
+    constexpr double volatility = 0.20;
+    constexpr double maturity = 1.0;
+
+    for (int steps : {50, 100, 500})
+    {
+        const double direct_price =
+            quant::crr_european_price_direct(
+                spot, strike, rate, volatility,
+                maturity, steps, quant::OptionType::Call);
+
+        const double reference_price =
+            quant::crr_binomial_price(
+                spot, strike, rate, volatility,
+                maturity, steps, quant::OptionType::Call,
+                quant::ExerciseStyle::European);
+
+        EXPECT_NEAR(direct_price, reference_price, 1e-9);
+    }
+}
+
+TEST(BinomialTest, DirectPutMatchesBackwardInduction)
+{
+    constexpr double spot = 100.0;
+    constexpr double strike = 100.0;
+    constexpr double rate = 0.05;
+    constexpr double volatility = 0.20;
+    constexpr double maturity = 1.0;
+
+    for (int steps : {50, 100, 500})
+    {
+        const double direct_price =
+            quant::crr_european_price_direct(
+                spot, strike, rate, volatility,
+                maturity, steps, quant::OptionType::Put);
+
+        const double reference_price =
+            quant::crr_binomial_price(
+                spot, strike, rate, volatility,
+                maturity, steps, quant::OptionType::Put,
+                quant::ExerciseStyle::European);
+
+        EXPECT_NEAR(direct_price, reference_price, 1e-9);
+    }
+}
+
+TEST(BinomialTest, DirectCallConvergesToBlackScholes)
+{
+    constexpr double spot = 100.0;
+    constexpr double strike = 100.0;
+    constexpr double rate = 0.05;
+    constexpr double volatility = 0.20;
+    constexpr double maturity = 1.0;
+
+    const double reference_price =
+        quant::black_scholes_call(
+            spot, strike, rate, volatility, maturity);
+
+    const double direct_price =
+        quant::crr_european_price_direct(
+            spot, strike, rate, volatility,
+            maturity, 5000, quant::OptionType::Call);
+
+    EXPECT_NEAR(direct_price, reference_price, 0.001);
+}
+
+TEST(BinomialTest, DirectPutConvergesToBlackScholes)
+{
+    constexpr double spot = 100.0;
+    constexpr double strike = 100.0;
+    constexpr double rate = 0.05;
+    constexpr double volatility = 0.20;
+    constexpr double maturity = 1.0;
+
+    const double reference_price =
+        quant::black_scholes_put(
+            spot, strike, rate, volatility, maturity);
+
+    const double direct_price =
+        quant::crr_european_price_direct(
+            spot, strike, rate, volatility,
+            maturity, 5000, quant::OptionType::Put);
+
+    EXPECT_NEAR(direct_price, reference_price, 0.001);
+}
+
+TEST(BinomialTest, DirectEuropeanPutCallParity)
+{
+    constexpr double spot = 100.0;
+    constexpr double strike = 100.0;
+    constexpr double rate = 0.05;
+    constexpr double volatility = 0.20;
+    constexpr double maturity = 1.0;
+    constexpr int steps = 500;
+
+    const double call =
+        quant::crr_european_price_direct(
+            spot, strike, rate, volatility,
+            maturity, steps, quant::OptionType::Call);
+
+    const double put =
+        quant::crr_european_price_direct(
+            spot, strike, rate, volatility,
+            maturity, steps, quant::OptionType::Put);
+
+    const double expected =
+        spot - strike * std::exp(-rate * maturity);
+
+    EXPECT_NEAR(call - put, expected, 1e-9);
+}
