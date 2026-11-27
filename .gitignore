@@ -1,12 +1,12 @@
-# Build directories
 build/
+build-native/
 cmake-build-*/
+.venv/
+.vscode/
 
-# Compiled files
 *.o
 *.a
 *.so
 *.out
 
-# IDE files
-.vscode/
+binomial_convergence.csv

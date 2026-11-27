@@ -14,6 +14,7 @@ add_library(quant_finance
     src/black_scholes.cpp
     src/greeks.cpp
     src/implied_volatility.cpp
+    src/binomial.cpp
 )
 
 target_include_directories(quant_finance
@@ -24,6 +25,24 @@ target_include_directories(quant_finance
 # Example application
 add_executable(option_pricing
     src/main.cpp
+)
+
+# CRR binomial convergence analysis
+add_executable(binomial_convergence
+    examples/binomial_convergence.cpp
+)
+
+target_link_libraries(binomial_convergence
+    PRIVATE quant_finance
+)
+
+# CRR binomial performance benchmark
+add_executable(binomial_benchmark
+    examples/binomial_benchmark.cpp
+)
+
+target_link_libraries(binomial_benchmark
+    PRIVATE quant_finance
 )
 
 target_link_libraries(option_pricing
@@ -38,9 +57,10 @@ if(BUILD_TESTING)
     find_package(GTest REQUIRED)
 
     add_executable(quant_finance_tests
-        tests/test_black_scholes.cpp
-        tests/test_greeks.cpp
-        tests/test_implied_volatility.cpp
+    tests/test_black_scholes.cpp
+    tests/test_greeks.cpp
+    tests/test_implied_volatility.cpp
+    tests/test_binomial.cpp
     )
 
     target_link_libraries(quant_finance_tests
